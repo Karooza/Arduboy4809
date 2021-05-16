@@ -48,6 +48,7 @@
 // ----- Arduboy pins -----
 #ifdef ARDUBOY_10
 
+#ifndef ARDUBOY4809
 #ifndef SLIMBOY
 #define PIN_CS 12       // Display CS Arduino pin number
 #define CS_PORT PORTD   // Display CS port
@@ -60,6 +61,7 @@
 #define PIN_RST 6       // Display reset Arduino pin number
 #define RST_PORT PORTD  // Display reset port
 #define RST_BIT PORTD7  // Display reset physical bit number
+#endif
 #endif
 
 #ifdef SLIMBOY
@@ -75,6 +77,24 @@
 
 #define BLUE_LED_PORT PORTD
 #define BLUE_LED_BIT PORTD6
+#elif ARDUBOY4809
+  // 
+  // Add new ARDUBOY4809 code here
+  //
+  // TODO: Verify pins
+#define RED_LED 5
+#define GREEN_LED 7
+#define BLUE_LED 6
+
+#define RED_LED_PORT PORTB
+#define RED_LED_BIT 2
+
+#define GREEN_LED_PORT PORTA
+#define GREEN_LED_BIT 1
+
+#define BLUE_LED_PORT PORTF
+#define BLUE_LED_BIT 4
+
 #else
 #define RED_LED 10   /**< The pin number for the red color in the RGB LED. */
 #define GREEN_LED 11 /**< The pin number for the greem color in the RGB LED. */
@@ -136,6 +156,11 @@
 #define B_BUTTON_DDR DDRC
 #define B_BUTTON_BIT PORTC2
 
+#elif ARDUBOY4809
+  // 
+  // Add new ARDUBOY4809 code here
+  // 
+
 #else
 
 #define PIN_LEFT_BUTTON A2
@@ -186,6 +211,11 @@
 #define SPEAKER_2_PORT PORTB
 #define SPEAKER_2_DDR DDRB
 #define SPEAKER_2_BIT PORTB3
+
+#elif ARDUBOY4809
+  // 
+  // Add new ARDUBOY4809 code here
+  // 
 
 #else
 #define PIN_SPEAKER_1 5  /**< The pin number of the first lead of the speaker */
@@ -292,13 +322,24 @@
 // ----- Pins common on Arduboy and DevKit -----
 
 // Unconnected analog input used for noise by initRandomSeed()
+#ifdef ARDUBOY4809
+  // 
+  // Add new ARDUBOY4809 code here
+  // 
+#else
 #define RAND_SEED_IN A4
 #define RAND_SEED_IN_PORT PORTF
 #define RAND_SEED_IN_BIT PORTF1
 // Value for ADMUX to read the random seed pin: 2.56V reference, ADC1
 #define RAND_SEED_IN_ADMUX (_BV(REFS0) | _BV(REFS1) | _BV(MUX0))
+#endif
 
 // SPI interface
+#ifdef ARDUBOY4809
+  // 
+  // Add new ARDUBOY4809 code here
+  // 
+#else
 #define SPI_MISO_PORT PORTB
 #define SPI_MISO_BIT PORTB3
 
@@ -310,6 +351,7 @@
 
 #define SPI_SS_PORT PORTB
 #define SPI_SS_BIT PORTB0
+#endif
 // --------------------
 
 // OLED hardware (SSD1306)
@@ -926,6 +968,7 @@ class Arduboy2Core
     // internals
     void static setCPUSpeed8MHz();
     void static bootSPI();
+    void static bootI2C();
     void static bootOLED();
     void static bootPins();
     void static bootPowerSaving();

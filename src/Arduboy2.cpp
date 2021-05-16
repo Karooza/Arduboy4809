@@ -72,6 +72,7 @@ void Arduboy2Base::begin()
 
 void Arduboy2Base::flashlight()
 {
+#ifndef ARDUBOY4809
 #ifndef SLIMBOY
   if (!pressed(UP_BUTTON)) {
     return;
@@ -90,6 +91,7 @@ void Arduboy2Base::flashlight()
   while (true) {
     idle();
   }
+#endif
 #endif
 }
 
@@ -277,6 +279,7 @@ bool Arduboy2Base::nextFrame()
   return true;
 }
 
+#ifndef ARDUBOY4809
 #ifndef SLIMBOY
 bool Arduboy2Base::nextFrameDEV()
 {
@@ -290,6 +293,7 @@ bool Arduboy2Base::nextFrameDEV()
   return ret;
 }
 #endif
+#endif
 
 int Arduboy2Base::cpuLoad()
 {
@@ -300,6 +304,7 @@ unsigned long Arduboy2Base::generateRandomSeed()
 {
   unsigned long seed;
 
+#ifndef ARDUBOY4809
   power_adc_enable(); // ADC on
 
   // do an ADC read from an unconnected input pin
@@ -309,6 +314,7 @@ unsigned long Arduboy2Base::generateRandomSeed()
   seed = ((unsigned long)ADC << 16) + micros();
 
   power_adc_disable(); // ADC off
+#endif
 
   return seed;
 }

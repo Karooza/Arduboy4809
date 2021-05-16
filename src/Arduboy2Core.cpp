@@ -9,7 +9,7 @@
 #include <avr/wdt.h>
 
 const uint8_t PROGMEM lcdBootProgram[] = {
-#ifdef SLIMBOY
+#if defined(SLIMBOY) || defined(ARDUBOY4809)
   // slimboy sets all registers to sane defaults since i2c
   // displays usually havn't a reset input
 
@@ -144,11 +144,21 @@ void Arduboy2Core::boot()
   setCPUSpeed8MHz();
   #endif
 
+  #ifndef ARDUBOY4809
   // Select the ADC input here so a delay isn't required in initRandomSeed()
   ADMUX = RAND_SEED_IN_ADMUX;
+  #endif
+
+  #ifdef ARDUBOY4809
+  CCP = 0xd8;                     // CCP: 0xD8 = Unlock protected IO registers for next 4 cycles
+  CLKCTRL_MCLKCTRLA = 0x80;       // Make sure 20MHz/16MHz clock is selected and output clock on PA7
+  CCP = 0xd8;                     // CCP: 0xD8 = Unlock protected IO registers for next 4 cycles
+  CLKCTRL_MCLKCTRLB = 0;          // Disable prescaler  
+  #endif
 
   bootPins();
   bootSPI();
+  bootI2C();
   bootOLED();
   bootPowerSaving();
 }
@@ -189,6 +199,10 @@ void Arduboy2Core::bootPins()
 
   // switch off LEDs by default
   PORTD &= ~(_BV(GREEN_LED_BIT)   | _BV(BLUE_LED_BIT) | _BV(RED_LED_BIT));
+#elif ARDUBOY4809
+  // 
+  // Add new ARDUBOY4809 code here
+  //
 #else
 #ifdef ARDUBOY_10
 
@@ -293,6 +307,35 @@ void i2c_stop(void) {
   TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTO);
   while( (TWCR & _BV(TWSTO)));
 }
+
+#elif ARDUBOY4809
+#define I2CADDR 0x3c
+
+void i2c_send_byte(uint8_t data) 
+{
+  TWI0.MDATA = data;
+
+  // Wait for the Write Interrupt Flag to become 1
+  while ((TWI0.MSTATUS & TWI_WIF_bm) != TWI_WIF_bm);
+  // Wait for the RXACK flag to become 0
+  while ((TWI0.MSTATUS & TWI_RXACK_bm) != 0);
+}
+
+void i2c_start() 
+{
+  TWI0.MADDR = I2CADDR<<1;
+
+  // Wait for the Write Interrupt Flag to become 1
+  while ((TWI0.MSTATUS & TWI_WIF_bm) != TWI_WIF_bm);
+  // Wait for the RXACK flag to become 0
+  while ((TWI0.MSTATUS & TWI_RXACK_bm) != 0);
+}
+
+void i2c_stop(void) 
+{
+  // Create stop condition
+  TWI0.MCTRLB = TWI_MCMD_STOP_gc;
+}
 #endif
 
 void Arduboy2Core::bootOLED()
@@ -309,6 +352,14 @@ void Arduboy2Core::bootOLED()
   
   //  TWBR = F_CPU/(2*400000)-8;
   TWBR = 1; // 12 = 400kHz
+#elif ARDUBOY4809
+  
+  i2c_start();
+  i2c_send_byte(0x00);
+  for (uint8_t i = 0; i < sizeof(lcdBootProgram); i++) 
+    i2c_send_byte(pgm_read_byte(lcdBootProgram + i));
+  i2c_stop();
+
 #else
   // reset the display
   delayShort(5); // reset pin should be low here. let it stay low a while
@@ -328,6 +379,7 @@ void Arduboy2Core::bootOLED()
 #endif
 }
 
+#ifndef ARDUBOY4809
 #ifndef SLIMBOY
 void Arduboy2Core::LCDDataMode()
 {
@@ -339,17 +391,44 @@ void Arduboy2Core::LCDCommandMode()
   bitClear(DC_PORT, DC_BIT);
 }
 #endif
+#endif
 
 // Initialize the SPI interface for the display
 void Arduboy2Core::bootSPI()
 {
+#ifndef ARDUBOY4809  
 #ifndef SLIMBOY
 // master, mode 0, MSB first, CPU clock / 2 (8MHz)
   SPCR = _BV(SPE) | _BV(MSTR);
   SPSR = _BV(SPI2X);
 #endif
+#endif
 }
 
+void Arduboy2Core::bootI2C()
+{
+#ifdef ARDUBOY4809
+  // TODO:
+  // - Increase clock rate
+  // - Is this the correct place for configuring the pins?
+
+  // Configure pins. Both SDA (PA2) and SCL (PA3) are inputs with pullups enabled
+  PORTA.DIRCLR = PIN2_bm | PIN3_bm;
+  PORTA.PIN2CTRL = PORT_PULLUPEN_bm;
+  PORTA.PIN3CTRL = PORT_PULLUPEN_bm;
+
+  uint16_t t_rise = 300;  // 1000ns @ 100kHz / 300ns @ 400kHz / 120ns @ 1MHz
+  uint32_t baud = (16000000 / 400000 - 16000000 / 1000 / 1000 * t_rise / 1000 - 10) / 2;
+	TWI0.MBAUD = (uint8_t)baud;
+
+  TWI0.MCTRLB |=  TWI_FLUSH_bm;             // Clear TWI state
+  TWI0.MCTRLA &= ~TWI_TIMEOUT_gm;           // Disable Timeout for TWI operation
+  TWI0.MCTRLA |=  TWI_ENABLE_bm;            //enables as master
+  TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+#endif
+}
+
+#ifndef ARDUBOY4809
 #ifndef SLIMBOY
 // Write to the SPI bus (MOSI pin)
 void Arduboy2Core::SPItransfer(uint8_t data)
@@ -365,7 +444,9 @@ void Arduboy2Core::SPItransfer(uint8_t data)
   while (!(SPSR & _BV(SPIF))) { } // wait
 }
 #endif
+#endif
 
+#ifndef ARDUBOY4809
 #ifndef SLIMBOY
 void Arduboy2Core::safeMode()
 {
@@ -383,21 +464,27 @@ void Arduboy2Core::safeMode()
   }
 }
 #endif
-
+#endif
 
 /* Power Management */
 
 void Arduboy2Core::idle()
 {
+  #ifndef ARDUBOY4809
   SMCR = _BV(SE); // select idle mode and enable sleeping
   sleep_cpu();
   SMCR = 0; // disable sleeping
+  #endif
 }
 
 void Arduboy2Core::bootPowerSaving()
 {
 #ifdef SLIMBOY
   // FIXME
+#elif ARDUBOY4809
+ //
+ // New Arduboy4809 code here
+ //  
 #else
   // disable Two Wire Interface (I2C) and the ADC
   // All other bits will be written with 0 so will be enabled
@@ -407,6 +494,7 @@ void Arduboy2Core::bootPowerSaving()
 #endif
 }
 
+#ifndef ARDUBOY4809
 #ifndef SLIMBOY
 // Shut down the display
 void Arduboy2Core::displayOff()
@@ -418,6 +506,7 @@ void Arduboy2Core::displayOff()
   delayShort(250);
   bitClear(RST_PORT, RST_BIT); // set display reset pin low (reset state)
 }
+#endif
 #endif
 
 // Restart the display after a displayOff()
@@ -432,6 +521,11 @@ void Arduboy2Core::displayOn()
 void Arduboy2Core::paint8Pixels(uint8_t pixels)
 {
 #ifdef SLIMBOY
+  i2c_start();
+  i2c_send_byte(0x40);
+  i2c_send_byte(pixels);
+  i2c_stop();
+#elif ARDUBOY4809
   i2c_start();
   i2c_send_byte(0x40);
   i2c_send_byte(pixels);
@@ -453,6 +547,24 @@ void Arduboy2Core::paintScreen(const uint8_t *image)
       TWDR = pgm_read_byte(image+i);
       TWCR = _BV(TWINT) |  _BV(TWEN);
       while( !(TWCR & _BV(TWINT)));
+    }
+    i2c_stop();
+  }
+#elif ARDUBOY4809
+  // I2C
+  for (uint8_t i=0; i<(WIDTH*HEIGHT/(16*8));) {
+    // send a bunch of data in one xmission
+    i2c_start();
+    i2c_send_byte(0x40);
+    for(uint8_t x=0;x<16;x++,i++) 
+    {
+      TWI0.MDATA = pgm_read_byte(image+i);
+
+      // Wait for the Write Interrupt Flag to become 1
+      while ((TWI0.MSTATUS & TWI_WIF_bm) != TWI_WIF_bm);
+      // Wait for the RXACK flag to become 0
+      while ((TWI0.MSTATUS & TWI_RXACK_bm) != 0); 
+      
     }
     i2c_stop();
   }
@@ -485,6 +597,20 @@ void Arduboy2Core::paintScreen(uint8_t image[], bool clear)
     if(clear) image[i] = 0;
   }
   while( !(TWCR & _BV(TWINT)));
+  i2c_stop();
+#elif ARDUBOY4809
+  // I2C
+  uint16_t i;
+  i2c_start();
+
+  i2c_send_byte(0x40);
+  
+  for (uint16_t i=0; i<(WIDTH*HEIGHT/8);i++) 
+  {
+    i2c_send_byte(image[i]);
+
+    if(clear) image[i] = 0;
+  }
   i2c_stop();
 #else
   uint16_t count;
@@ -526,6 +652,16 @@ void Arduboy2Core::blank()
     }
     i2c_stop();
   }
+#elif ARDUBOY4809
+  for (uint8_t i=0; i<(WIDTH*HEIGHT/(16*8)); i++) {
+    i2c_start();
+    i2c_send_byte(0x40);
+    for(uint8_t x=0;x<16;x++) 
+    {
+      i2c_send_byte(0);
+    }
+    i2c_stop();
+  }  
 #else
   for (int i = 0; i < (HEIGHT*WIDTH)/8; i++)
     SPItransfer(0x00);
@@ -539,6 +675,11 @@ void Arduboy2Core::sendLCDCommand(uint8_t command)
   i2c_send_byte(0x00);
   i2c_send_byte(command);
   i2c_stop();
+#elif ARDUBOY4809
+  i2c_start();
+  i2c_send_byte(0x00);
+  i2c_send_byte(command);
+  i2c_stop(); 
 #else
   LCDCommandMode();
   SPItransfer(command);
@@ -585,6 +726,10 @@ void Arduboy2Core::setRGBled(uint8_t red, uint8_t green, uint8_t blue)
   TCCR0A = _BV(COM0B1) | _BV(COM0A1) | _BV(WGM01) | _BV(WGM00);
   OCR0A = 255 - blue;
   OCR0B = 255 - red;
+#elif ARDUBOY4809
+  //
+  // New code here...
+  //
 #elif defined(ARDUBOY_10) // RGB, all the pretty colors
   // timer 0: Fast PWM, OC0A clear on compare / set at top
   // We must stay in Fast PWM mode because timer 0 is used for system timing.
@@ -618,6 +763,10 @@ void Arduboy2Core::setRGBled(uint8_t color, uint8_t val)
   } else if (color == BLUE_LED) {
     OCR0A = val;
   }
+#elif ARDUBOY4809
+ //
+ // New code here
+ //  
 #elif defined(ARDUBOY_10)
   if (color == RED_LED)
   {
@@ -644,6 +793,10 @@ void Arduboy2Core::freeRGBled()
 {
 #ifdef SLIMBOY
   TCCR0A = _BV(WGM01) | _BV(WGM00);
+#elif ARDUBOY4809
+ //
+ // New code here ...
+ //  
 #else
 #ifdef ARDUBOY_10
   // clear the COM bits to return the pins to normal I/O mode
@@ -655,6 +808,7 @@ void Arduboy2Core::freeRGBled()
 
 void Arduboy2Core::digitalWriteRGB(uint8_t red, uint8_t green, uint8_t blue)
 {
+#ifndef ARDUBOY4809  
 #ifdef ARDUBOY_10
   bitWrite(RED_LED_PORT, RED_LED_BIT, red);
   bitWrite(GREEN_LED_PORT, GREEN_LED_BIT, green);
@@ -665,10 +819,12 @@ void Arduboy2Core::digitalWriteRGB(uint8_t red, uint8_t green, uint8_t blue)
   (void)green;  // parameter unused
   bitWrite(BLUE_LED_PORT, BLUE_LED_BIT, blue);
 #endif
+#endif
 }
 
 void Arduboy2Core::digitalWriteRGB(uint8_t color, uint8_t val)
 {
+#ifndef ARDUBOY4809  
 #ifdef ARDUBOY_10
   if (color == RED_LED)
   {
@@ -689,6 +845,7 @@ void Arduboy2Core::digitalWriteRGB(uint8_t color, uint8_t val)
     bitWrite(BLUE_LED_PORT, BLUE_LED_BIT, val);
   }
 #endif
+#endif
 }
 
 /* Buttons */
@@ -705,6 +862,10 @@ uint8_t Arduboy2Core::buttonsState()
 
   if (bitRead(A_BUTTON_PORTIN, A_BUTTON_BIT) == 0) { buttons |= A_BUTTON; }
   if (bitRead(B_BUTTON_PORTIN, B_BUTTON_BIT) == 0) { buttons |= B_BUTTON; }
+#elif ARDUBOY4809
+//
+// New code here...
+//  
 #else
 #ifdef ARDUBOY_10
   // up, right, left, down
@@ -738,6 +899,7 @@ void Arduboy2Core::delayShort(uint16_t ms)
 
 void Arduboy2Core::exitToBootloader()
 {
+#ifndef ARDUBOY4809  
   cli();
 #ifndef SLIMBOY
   // set bootloader magic key
@@ -751,6 +913,7 @@ void Arduboy2Core::exitToBootloader()
   WDTCSR = (_BV(WDCE) | _BV(WDE));
   WDTCSR = _BV(WDE);
   while (true) { }
+#endif  
 }
 
 // Replacement main() that eliminates the USB stack code.
@@ -759,6 +922,7 @@ void Arduboy2Core::exitToBootloader()
 
 void Arduboy2Core::mainNoUSB()
 {
+#ifndef ARDUBOY4809  
 #ifndef SLIMBOY
   // disable USB
   UDCON = _BV(DETACH);
@@ -804,6 +968,7 @@ void Arduboy2Core::mainNoUSB()
 #else
   // Nano seems to need init()
   init();
+#endif
 #endif
   setup();
 
