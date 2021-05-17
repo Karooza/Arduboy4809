@@ -151,7 +151,7 @@ void Arduboy2Core::boot()
 
   #ifdef ARDUBOY4809
   CCP = 0xd8;                     // CCP: 0xD8 = Unlock protected IO registers for next 4 cycles
-  CLKCTRL_MCLKCTRLA = 0x80;       // Make sure 20MHz/16MHz clock is selected and output clock on PA7
+  CLKCTRL_MCLKCTRLA = 0x80;       // Make sure 20MHz/16MHz clock is selected and output clock on PA7 (for debug purpose)
   CCP = 0xd8;                     // CCP: 0xD8 = Unlock protected IO registers for next 4 cycles
   CLKCTRL_MCLKCTRLB = 0;          // Disable prescaler  
   #endif
@@ -200,9 +200,11 @@ void Arduboy2Core::bootPins()
   // switch off LEDs by default
   PORTD &= ~(_BV(GREEN_LED_BIT)   | _BV(BLUE_LED_BIT) | _BV(RED_LED_BIT));
 #elif ARDUBOY4809
-  // 
-  // Add new ARDUBOY4809 code here
-  //
+  // Configure pins. 
+  // Both SDA (PA2) and SCL (PA3) are inputs with pullups enabled
+  PORTA.DIRCLR = PIN2_bm | PIN3_bm;
+  PORTA.PIN2CTRL = PORT_PULLUPEN_bm;
+  PORTA.PIN3CTRL = PORT_PULLUPEN_bm;
 #else
 #ifdef ARDUBOY_10
 
@@ -408,22 +410,18 @@ void Arduboy2Core::bootSPI()
 void Arduboy2Core::bootI2C()
 {
 #ifdef ARDUBOY4809
-  // TODO:
-  // - Increase clock rate
-  // - Is this the correct place for configuring the pins?
+  // The ATMega4809 supports Fast Mode Plus I2C which goes up to 1MHz. Arduboy4809
+  // takes advantage of this and tries to run the bus at up to 800kHz. To allow this
+  // faster signals stronger (lower value) pull-up resistors might be needed. 
 
-  // Configure pins. Both SDA (PA2) and SCL (PA3) are inputs with pullups enabled
-  PORTA.DIRCLR = PIN2_bm | PIN3_bm;
-  PORTA.PIN2CTRL = PORT_PULLUPEN_bm;
-  PORTA.PIN3CTRL = PORT_PULLUPEN_bm;
+  //uint16_t t_rise = 300;  // 1000ns @ 100kHz / 300ns @ 400kHz / 120ns @ 1MHz
+  //uint32_t baud = (16000000 / 400000 - 16000000 / 1000 / 1000 * t_rise / 1000 - 10) / 2;
+	TWI0.MBAUD = 4;
 
-  uint16_t t_rise = 300;  // 1000ns @ 100kHz / 300ns @ 400kHz / 120ns @ 1MHz
-  uint32_t baud = (16000000 / 400000 - 16000000 / 1000 / 1000 * t_rise / 1000 - 10) / 2;
-	TWI0.MBAUD = (uint8_t)baud;
-
+  TWI0.CTRLA |= TWI_FMPEN_bm;               // Enable Fast Mode Plus
   TWI0.MCTRLB |=  TWI_FLUSH_bm;             // Clear TWI state
   TWI0.MCTRLA &= ~TWI_TIMEOUT_gm;           // Disable Timeout for TWI operation
-  TWI0.MCTRLA |=  TWI_ENABLE_bm;            //enables as master
+  TWI0.MCTRLA |=  TWI_ENABLE_bm;            // Enables as master
   TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
 #endif
 }
