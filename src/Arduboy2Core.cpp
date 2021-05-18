@@ -311,7 +311,9 @@ void i2c_stop(void) {
 }
 
 #elif ARDUBOY4809
+#ifndef I2CADDR
 #define I2CADDR 0x3c
+#endif
 
 void i2c_send_byte(uint8_t data) 
 {
