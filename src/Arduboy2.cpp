@@ -304,7 +304,15 @@ unsigned long Arduboy2Base::generateRandomSeed()
 {
   unsigned long seed;
 
-#ifndef ARDUBOY4809
+#ifdef ARDUBOY4809
+  // Start conversion
+  ADC0.COMMAND = ADC_STCONV_bm;
+
+  // Wait for conversion to complete
+  while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));
+
+  seed = ADC0.RES + micros();
+#else
   power_adc_enable(); // ADC on
 
   // do an ADC read from an unconnected input pin

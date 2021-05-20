@@ -144,7 +144,10 @@ void Arduboy2Core::boot()
   setCPUSpeed8MHz();
   #endif
 
-  #ifndef ARDUBOY4809
+  #ifdef ARDUBOY4809
+  // Select ADC input to use
+  ADC0.MUXPOS |= RAND_SEED_IN_ADMUX;
+  #else
   // Select the ADC input here so a delay isn't required in initRandomSeed()
   ADMUX = RAND_SEED_IN_ADMUX;
   #endif

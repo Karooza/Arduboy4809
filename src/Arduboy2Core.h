@@ -323,9 +323,10 @@
 
 // Unconnected analog input used for noise by initRandomSeed()
 #ifdef ARDUBOY4809
-  // 
-  // Add new ARDUBOY4809 code here
-  // 
+
+// Using PD6 / channel 6 (not connected on Nano Every)
+#define RAND_SEED_IN_ADMUX ADC_MUXPOS_AIN6_gc
+
 #else
 #define RAND_SEED_IN A4
 #define RAND_SEED_IN_PORT PORTF
