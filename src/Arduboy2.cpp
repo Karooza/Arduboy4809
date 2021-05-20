@@ -305,6 +305,10 @@ unsigned long Arduboy2Base::generateRandomSeed()
   unsigned long seed;
 
 #ifdef ARDUBOY4809
+
+  // Select ADC input
+  ADC0.MUXPOS = RAND_SEED_IN_ADMUX;
+
   // Start conversion
   ADC0.COMMAND = ADC_STCONV_bm;
 

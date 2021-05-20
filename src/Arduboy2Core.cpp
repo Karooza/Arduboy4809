@@ -144,17 +144,14 @@ void Arduboy2Core::boot()
   setCPUSpeed8MHz();
   #endif
 
-  #ifdef ARDUBOY4809
-  // Select ADC input to use
-  ADC0.MUXPOS |= RAND_SEED_IN_ADMUX;
-  #else
+  #ifndef ARDUBOY4809
   // Select the ADC input here so a delay isn't required in initRandomSeed()
   ADMUX = RAND_SEED_IN_ADMUX;
   #endif
 
   #ifdef ARDUBOY4809
   CCP = 0xd8;                     // CCP: 0xD8 = Unlock protected IO registers for next 4 cycles
-  CLKCTRL_MCLKCTRLA = 0x80;       // Make sure 20MHz/16MHz clock is selected and output clock on PA7 (for debug purpose)
+  CLKCTRL_MCLKCTRLA = 0x80;       // Make sure 20MHz/16MHz clock is selected and output clock on PA7 (for debug purpose on Curiosity)
   CCP = 0xd8;                     // CCP: 0xD8 = Unlock protected IO registers for next 4 cycles
   CLKCTRL_MCLKCTRLB = 0;          // Disable prescaler  
   #endif
