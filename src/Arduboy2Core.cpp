@@ -205,6 +205,15 @@ void Arduboy2Core::bootPins()
   PORTA.DIRCLR = PIN2_bm | PIN3_bm;
   PORTA.PIN2CTRL = PORT_PULLUPEN_bm;
   PORTA.PIN3CTRL = PORT_PULLUPEN_bm;
+
+  //Buttons
+  PORTA_PIN0CTRL = PORT_PULLUPEN_bm;  //Down button
+  PORTC_PIN6CTRL = PORT_PULLUPEN_bm;  //A button
+  PORTD_PIN0CTRL = PORT_PULLUPEN_bm;  //Up button
+  PORTD_PIN1CTRL = PORT_PULLUPEN_bm;  //B button
+  PORTD_PIN2CTRL = PORT_PULLUPEN_bm;  //Left button
+  PORTF_PIN5CTRL = PORT_PULLUPEN_bm;  //Right button
+  
 #else
 #ifdef ARDUBOY_10
 
@@ -863,9 +872,14 @@ uint8_t Arduboy2Core::buttonsState()
   if (bitRead(A_BUTTON_PORTIN, A_BUTTON_BIT) == 0) { buttons |= A_BUTTON; }
   if (bitRead(B_BUTTON_PORTIN, B_BUTTON_BIT) == 0) { buttons |= B_BUTTON; }
 #elif ARDUBOY4809
-//
-// New code here...
-//  
+  buttons = 0;
+  if (bitRead(UP_BUTTON_PORTIN, UP_BUTTON_BIT) == 0) { buttons |= UP_BUTTON; }
+  if (bitRead(DOWN_BUTTON_PORTIN, DOWN_BUTTON_BIT) == 0) { buttons |= DOWN_BUTTON; }
+  if (bitRead(LEFT_BUTTON_PORTIN, LEFT_BUTTON_BIT) == 0) { buttons |= LEFT_BUTTON; }
+  if (bitRead(RIGHT_BUTTON_PORTIN, RIGHT_BUTTON_BIT) == 0) { buttons |= RIGHT_BUTTON; }
+
+  if (bitRead(A_BUTTON_PORTIN, A_BUTTON_BIT) == 0) { buttons |= A_BUTTON; }
+  if (bitRead(B_BUTTON_PORTIN, B_BUTTON_BIT) == 0) { buttons |= B_BUTTON; }
 #else
 #ifdef ARDUBOY_10
   // up, right, left, down
