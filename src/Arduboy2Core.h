@@ -82,9 +82,9 @@
   // Add new ARDUBOY4809 code here
   //
   // TODO: Verify pins
-#define RED_LED 5
-#define GREEN_LED 7
-#define BLUE_LED 6
+#define RED_LED PIN2_bp
+#define GREEN_LED PIN1_bp
+#define BLUE_LED PIN4_bp
 
 #define RED_LED_PORT PORTB
 #define RED_LED_BIT 2
@@ -213,9 +213,14 @@
 #define SPEAKER_2_BIT PORTB3
 
 #elif ARDUBOY4809
-  // 
-  // Add new ARDUBOY4809 code here
-  // 
+
+#define SPEAKER_1_PORT PORTB_OUT
+#define SPEAKER_1_DDR PORTB_DIR
+#define SPEAKER_1_BIT PIN0_bp
+
+#define SPEAKER_2_PORT PORTB_OUT
+#define SPEAKER_2_DDR PORTB_DIR
+#define SPEAKER_2_BIT PIN1_bp
 
 #else
 #define PIN_SPEAKER_1 5  /**< The pin number of the first lead of the speaker */
