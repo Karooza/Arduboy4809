@@ -22,14 +22,15 @@ void BeepPin1::begin()
 #elif ARDUBOY4809
   // Using pin PB0 or D9 on the Nano Every 
   // This pin is driven by Timer A0 which is also used by Arduino
-  // Below we re-configure it slightly.
+  // For now we don't change the timer clock but just the mode to
+  // frequency waveform generation mode.
 
   // Make pin PB0 and output
   PORTB_DIRSET = PIN0_bm;
   // Using Frequency waveform generation mode
   TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_FRQ_gc;
-    // Using CLK_PER / 8
-  TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV8_gc | TCA_SINGLE_ENABLE_bm;
+  // Using CLK_PER / 8
+  //TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV8_gc | TCA_SINGLE_ENABLE_bm;
 
 #else
   TCCR3A = 0;
@@ -112,7 +113,7 @@ void BeepPin2::begin()
   // Using Frequency waveform generation mode
   TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_FRQ_gc;
   // Using CLK_PER / 8
-  TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV8_gc | TCA_SINGLE_ENABLE_bm;
+  // TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV8_gc | TCA_SINGLE_ENABLE_bm;
 #else
   TCCR4A = 0; // normal mode. Disable PWM
   TCCR4B = bit(CS43); // divide by 128 clock prescale
