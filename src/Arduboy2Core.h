@@ -392,7 +392,7 @@
 #endif
 // --------------------
 
-// OLED hardware (SSD1306)
+// OLED hardware (SSD1306 & SH1106)
 
 #define OLED_PIXELS_INVERTED 0xA7 // All pixels inverted
 #define OLED_PIXELS_NORMAL 0xA6 // All pixels normal
@@ -406,6 +406,11 @@
 #define OLED_HORIZ_FLIPPED 0xA0 // reversed segment re-map
 #define OLED_HORIZ_NORMAL 0xA1 // normal segment re-map
 
+#define OLED_SET_PAGE_ADDRESS      0xB0
+#ifdef OLED_SH1106
+#define OLED_SET_COLUMN_ADDRESS_LO 0x02 //SH1106 only: 1st pixel starts on column 2
+#endif
+#define OLED_SET_COLUMN_ADDRESS_HI 0x10
 // -----
 
 #define WIDTH 128 /**< The width of the display in pixels */

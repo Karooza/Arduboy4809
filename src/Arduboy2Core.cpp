@@ -16,9 +16,11 @@ const uint8_t PROGMEM lcdBootProgram[] = {
   // Display Off
   0xAE,
 
+#ifndef OLED_SH1106
   // Set Display Clock Divisor v = 0xF0
   // default is 0x80
   0xD5, 0xF0,
+#endif
 
   // Set Multiplex Ratio v = 0x3F
   0xA8, 0x3F,
@@ -61,6 +63,9 @@ const uint8_t PROGMEM lcdBootProgram[] = {
   // Display On
   0xAF,
 
+#ifdef OLED_SH1106
+  OLED_SET_COLUMN_ADDRESS_LO
+#else
   // set display mode = horizontal addressing mode (0x00)
   0x20, 0x00,
 
@@ -69,6 +74,8 @@ const uint8_t PROGMEM lcdBootProgram[] = {
 
   // set page address range
   0x22, 0x00, 0x07,
+#endif
+
 #else
   // boot defaults are commented out but left here in case they
   // might prove useful for reference
@@ -561,6 +568,27 @@ void Arduboy2Core::paintScreen(const uint8_t *image)
   }
 #elif ARDUBOY4809
   // I2C
+#ifdef OLED_SH1106
+  // Using SH1106
+  for (uint8_t i = 0; i < HEIGHT / 8; i++)
+  {
+    sendLCDCommand(OLED_SET_PAGE_ADDRESS + i);
+    sendLCDCommand(OLED_SET_COLUMN_ADDRESS_HI);
+    
+    i2c_start();
+    i2c_send_byte(0x40);
+    for (uint8_t j = WIDTH; j > 0; j--)
+    {
+      TWI0.MDATA = pgm_read_byte(image+i);
+      // Wait for the Write Interrupt Flag to become 1
+      while ((TWI0.MSTATUS & TWI_WIF_bm) != TWI_WIF_bm);
+      // Wait for the RXACK flag to become 0
+      while ((TWI0.MSTATUS & TWI_RXACK_bm) != 0); 
+    }
+    i2c_stop();
+  }
+#else
+  // Using SSD1306 
   for (uint8_t i=0; i<(WIDTH*HEIGHT/(16*8));) {
     // send a bunch of data in one xmission
     i2c_start();
@@ -577,6 +605,7 @@ void Arduboy2Core::paintScreen(const uint8_t *image)
     }
     i2c_stop();
   }
+#endif  
 #else
   for (int i = 0; i < (HEIGHT*WIDTH)/8; i++)
   {
@@ -609,6 +638,33 @@ void Arduboy2Core::paintScreen(uint8_t image[], bool clear)
   i2c_stop();
 #elif ARDUBOY4809
   // I2C
+#ifdef OLED_SH1106
+  // Using SH1106
+  uint16_t i;
+
+  // TODO: - Optimize, try to do in one I2C transfer  
+  for (uint8_t y = 0; y < HEIGHT / 8; y++)
+  {
+    i2c_start();
+    i2c_send_byte(0x00);    
+    i2c_send_byte(OLED_SET_PAGE_ADDRESS + y);  
+    i2c_send_byte(OLED_SET_COLUMN_ADDRESS_HI);  // we only need to reset hi nibble to 0
+    i2c_stop(); 
+
+    i2c_start();
+    i2c_send_byte(0x40);
+    for (uint8_t x = WIDTH; x > 0; x--)
+    {
+      i2c_send_byte(*(image));
+      if(clear) image[i] = 0;
+      *(image++);
+    }
+    i2c_stop();
+  }
+  
+
+#else
+  // Using SSD1306
   uint16_t i;
   i2c_start();
 
@@ -621,6 +677,7 @@ void Arduboy2Core::paintScreen(uint8_t image[], bool clear)
     if(clear) image[i] = 0;
   }
   i2c_stop();
+#endif
 #else
   uint16_t count;
 
@@ -662,6 +719,28 @@ void Arduboy2Core::blank()
     i2c_stop();
   }
 #elif ARDUBOY4809
+#ifdef OLED_SH1106
+  // Using SH1106
+  for (uint8_t i = 0; i < HEIGHT / 8; i++)
+  {
+    sendLCDCommand(OLED_SET_PAGE_ADDRESS + i);
+    sendLCDCommand(OLED_SET_COLUMN_ADDRESS_HI);
+    
+    i2c_start();
+    i2c_send_byte(0x40);
+    for (uint8_t j = WIDTH; j > 0; j--)
+    { 
+      TWI0.MDATA = 0;
+
+      // Wait for the Write Interrupt Flag to become 1
+      while ((TWI0.MSTATUS & TWI_WIF_bm) != TWI_WIF_bm);
+      // Wait for the RXACK flag to become 0
+      while ((TWI0.MSTATUS & TWI_RXACK_bm) != 0); 
+    }
+    i2c_stop();
+  }  
+#else
+  // Using SSD1306
   for (uint8_t i=0; i<(WIDTH*HEIGHT/(16*8)); i++) {
     i2c_start();
     i2c_send_byte(0x40);
@@ -670,7 +749,8 @@ void Arduboy2Core::blank()
       i2c_send_byte(0);
     }
     i2c_stop();
-  }  
+  } 
+#endif   
 #else
   for (int i = 0; i < (HEIGHT*WIDTH)/8; i++)
     SPItransfer(0x00);
