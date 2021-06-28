@@ -1,3 +1,23 @@
+# ARDUBOY4809 - Arduboy2 port to the ATMega4809
+
+ARDUBOY4809 is an Arduboy2 library which supports the ATMega4809 microcontroller and was originally forked from SLIMBOY.
+
+Some features:
+ - Takes advantage of I2C Fast Mode Plus support to drive the display at higher clock speeds
+ - Supports both SSD1306 and SH1106 OLED displays
+ - Has more flash memory and RAM than the original Arduboy hardware
+
+## Breadboard Setup
+
+To get started the following breadboard setup can be used:
+![Breadboard Layout](Arduboy4809_bb.png)
+
+## Custom PCB
+
+A custom PCB is also available which includes battery charging and boost converter circuits
+![Custom PCB](pcbArduboy4809.png)
+
+
 # SLIMBOY - Arduboy2 port to Arduino Nano and I²C display
 
 This is a port of the original Arduboy2 code to the simpler and cheaper Arduino Nano and an I²C display.
