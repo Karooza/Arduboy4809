@@ -10,11 +10,13 @@ Some features:
 ## Breadboard Setup
 
 To get started the following breadboard setup can be used:
+
 ![Breadboard Layout](Arduboy4809_bb.png)
 
 ## Custom PCB
 
-A custom PCB is also available which includes battery charging and boost converter circuits
+A custom PCB is also available which includes battery charging and boost converter circuits.
+
 ![Custom PCB](pcbArduboy4809.png)
 
 
