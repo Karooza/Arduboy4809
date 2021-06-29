@@ -1,0 +1,61 @@
+Partlist
+
+Exported from ArduboyChallenge.brd at 2021/06/29 02:18 PM
+
+EAGLE Version 9.2.2 Copyright (c) 1988-2018 Autodesk, Inc.
+
+Assembly variant: 
+
+Part     Value             Package          Library             Position (mm)         Orientation
+
+3V3      TPTP16SQ          TP16SQ           testpad             (48.26 5.08)          MR0
+5V       TPTP16SQ          TP16SQ           testpad             (21.59 59.69)         MR0
+A6       TPTP16SQ          TP16SQ           testpad             (52.07 26.67)         MR0
+A7       TPTP16SQ          TP16SQ           testpad             (52.07 29.21)         MR0
+AREF     TPTP16SQ          TP16SQ           testpad             (48.26 10.16)         MR0
+BT_A     TACT_THT_6MM      TACT_6MM         JanLib              (55 10)               R0
+BT_B     TACT_THT_6MM      TACT_6MM         JanLib              (68 16)               R0
+BT_DN    TACT_THT_6MM      TACT_6MM         JanLib              (13.7 6)              R0
+BT_LFT   TACT_THT_6MM      TACT_6MM         JanLib              (5.8 14)              R0
+BT_RHT   TACT_THT_6MM      TACT_6MM         JanLib              (21.6 14)             R0
+BT_UP    TACT_THT_6MM      TACT_6MM         JanLib              (13.7 22)             R0
+C1       4.7uF             C0603            rcl                 (14.81 47.54)         R90
+C2       4.7uF             C0603            rcl                 (7.31 47.54)          R90
+C3       4.7uF             C0603            rcl                 (62.71 40.96)         R0
+C4       10uF              C0805            rcl                 (62.76 47.26)         R0
+D1       B130LAW           SOD123           JanLib              (58.66 39.08)         R270
+GND      TPTP16SQ          TP16SQ           testpad             (21.59 46.99)         MR0
+J1       JST-PH-2-SIDE     JST-PH-2-SIDE    JanLib              (19.86 32.96)         R180
+J2                         1X15_LOCK        SparkFun-Connectors (29.51 3.81)          R90
+J3                         1X15_LOCK        SparkFun-Connectors (44.75 3.81)          R90
+L1       4.7uH             SMD_LQH3C_34     JanLib              (62.71 37.96)         R0
+LED1                       CHIP-LED0603     led                 (12.04 52.87)         R90
+LED2     LED_RGB_5MM       LED_RGB_5MM      JanLib              (59.69 55.31)         R0
+MISO     TPTP16SQ          TP16SQ           testpad             (21.59 54.61)         MR0
+MOSI     TPTP16SQ          TP16SQ           testpad             (21.59 52.07)         MR0
+OLED1    OLED_I2C_0.96     OLED_0.96_I2C    JanLib              (37 65)               R0
+Q1       DMP3098L          SOT-23           JanLib              (53.5 30.25)          R90
+R1       470               R0603            rcl                 (10.39 50.44)         R180
+R2       4.7k              R0603            rcl                 (13.91 50.44)         R0
+R3       1.1k              R0603            rcl                 (58.71 43.49)         R270
+R4       330               R0603            rcl                 (58.71 46.69)         R270
+R5       470               R0603            rcl                 (57.06 30.26)         R90
+R6       330               R0603            rcl                 (23.83 7.42)          R0
+R7                         R0603            rcl                 (23.83 5.08)          R0
+R8       10k               R0603            rcl                 (59.39 30.26)         R270
+R9       330               R0603            rcl                 (60.97 50.7)          R90
+R10      330               R0603            rcl                 (57.66 50.7)          R90
+R11      330               R0603            rcl                 (64.31 50.7)          R90
+R12      1k                R0603            rcl                 (20.32 27.94)         R0
+R13                        R0603            rcl                 (50.63 27.19)         R270
+R14                        R0603            rcl                 (48.56 27.17)         R270
+RST      TPTP16SQ          TP16SQ           testpad             (52.07 34.29)         MR0
+RX0      TPTP16SQ          TP16SQ           testpad             (25.4 34.29)          MR0
+S1       SWITCH_SLIDE_SPDT SWITCH_SPDT_MINI JanLib              (68.58 35.56)         R90
+SCK      TPTP16SQ          TP16SQ           testpad             (21.59 57.15)         MR0
+SG1      BUZZER_F/TMB      F/TMB            JanLib              (9.5 38.1)            R90
+SS       TPTP16SQ          TP16SQ           testpad             (21.59 49.53)         MR0
+TX1      TPTP16SQ          TP16SQ           testpad             (25.4 36.83)          MR0
+U1       MCP7383           SOT-23-5(MCP)    JanLib              (11.01 47.54)         R270
+U2       MCP1640           SOT23-6(MCP)     JanLib              (62.71 44.06)         R180
+VIN      TPTP16SQ          TP16SQ           testpad             (52.07 36.83)         MR0
